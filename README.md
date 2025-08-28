@@ -1,8 +1,3 @@
-Here’s a polished **`README.md`** draft you can drop straight into your GitHub repo for **3DCricket\_ThreeJS**. I’ve structured it like an open-source project handoff, with setup, usage, contribution, and future roadmap.
-
----
-
-````markdown
 # 🏏 3DCricket_ThreeJS
 
 An online **Three.js-powered Cricket simulator** inspired by *Wii Sports Baseball*!  
@@ -126,9 +121,3 @@ MIT License — free to use, modify, and distribute.
 
 💡 *This is just the beginning. The 1:1 phone-to-bat motion system is the **real game changer** — let’s build the full cricket experience together!*
 
-```
-
----
-
-Would you like me to also create a **`CONTRIBUTING.md`** (guidelines for PRs, coding style, and roadmap tasks), so it looks more professional and community-ready?
-```
