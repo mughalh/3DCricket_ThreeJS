@@ -1,0 +1,4 @@
+switch to accelermeter
+add the powerbar
+add ammojs ball server
+add change sides batter <-> baller

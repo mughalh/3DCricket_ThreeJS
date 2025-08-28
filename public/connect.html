@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Phone Controller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { margin:0; font-family: system-ui, Arial; background:#111; color:#fff; display:grid; place-items:center; height:100vh; }
+    #panel { background: rgba(255,255,255,.06); padding: 18px 22px; border-radius: 12px; width:min(520px, 92vw); }
+    .muted { opacity:.7; font-size: .95rem; }
+    button { margin-top:10px; padding:8px 14px; border-radius:8px; border:none; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <div id="status">Connecting…</div>
+    <div class="muted" style="margin-top:8px">Hold steady and calibrate before playing.</div>
+    <button id="calibrateBtn">📐 Calibrate</button>
+    <div id="vals" class="muted" style="margin-top:10px"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const statusEl = document.getElementById("status");
+    const valsEl = document.getElementById("vals");
+    const calibrateBtn = document.getElementById("calibrateBtn");
+
+    // Calibration baseline
+    let calibration = { gamma: 0 };
+
+    // Latest orientation
+    let latestOrientation = { beta:0, gamma:0 };
+
+    // --- WebSocket connection ---
+    socket.on("connect", () => {
+      console.log("✅ Phone connected to server");
+      statusEl.textContent = "✅ Connected. Streaming orientation…";
+    });
+    socket.on("disconnect", () => {
+      console.warn("⚠️ Phone disconnected");
+      statusEl.textContent = "⚠️ Disconnected";
+    });
+
+    // --- Orientation listener ---
+    function onOrientation(e) {
+      latestOrientation = {
+        beta:  e.beta  || 0, // swing arc
+        gamma: e.gamma || 0, // roll (bat face)
+      };
+    }
+    window.addEventListener("deviceorientation", onOrientation);
+
+    // --- Calibration (for gamma only) ---
+    function calibrate() {
+      calibration.gamma = latestOrientation.gamma || 0;
+      console.log("📐 Gamma calibration set:", calibration.gamma);
+
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+      }
+      alert("Calibration complete! Hold phone straight ahead.");
+    }
+    calibrateBtn.addEventListener("click", calibrate);
+
+    // --- Send orientation @ ~60fps ---
+    setInterval(() => {
+      const calibratedGamma = latestOrientation.gamma - (calibration.gamma || 0);
+
+      const payload = {
+        orientation: {
+          beta: latestOrientation.beta,   // swing arc
+          gamma: calibratedGamma          // calibrated roll
+        }
+      };
+      socket.emit("sensor-data", payload);
+
+      if (valsEl) {
+        valsEl.textContent =
+          `β:${latestOrientation.beta.toFixed(1)}° ` +
+          `γ:${calibratedGamma.toFixed(1)}°`;
+      }
+    }, 16); // ~60Hz
+  </script>
+</body>
+</html>

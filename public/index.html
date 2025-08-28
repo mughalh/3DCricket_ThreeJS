@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Game - Desktop Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #1a2a6c, #2a5298);
+            color: white;
+        }
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            transition: opacity 0.5s;
+        }
+        #status {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        #qrcode {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+        #url {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            max-width: 500px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+        }
+        .instructions ol {
+            text-align: left;
+        }
+        .hidden {
+            display: none !important;
+        }
+        #connection-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="overlay">
+            <div id="status">🔄 Waiting for Phone connection...</div>
+            <div id="qrcode"></div>
+            <div id="url"></div>
+            <div class="instructions">
+                <h3>How to Connect:</h3>
+                <ol>
+                    <li>Or visit the URL shown above on your mobile device</li>
+                    <li>Allow motion sensor access when prompted</li>
+                    <li>Tilt your phone to control the cricket bat</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Initialize Three.js scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x202025);
+        
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
+        camera.position.set(0, 2, 6);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('container').appendChild(renderer.domElement);
+        
+         // --- Add Sky Sphere ---
+      // This creates a large sphere that acts as the sky.
+      const skyGeo = new THREE.SphereGeometry(18000, 32, 32);
+      const skyMat = new THREE.MeshBasicMaterial({
+        color: 0x94b4d4,
+        side: THREE.BackSide
+      });
+      const sky = new THREE.Mesh(skyGeo, skyMat);
+      scene.add(sky);
+
+        // Add lights
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+        scene.add(hemiLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(5, 10, 7.5);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.far = 20;
+        dirLight.shadow.mapSize.set(1024, 1024);
+        scene.add(dirLight);
+        
+        
+        // Create cricket bat
+        function createBat() {
+            const bat = new THREE.Group();
+            
+            // Materials
+            const woodMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xdeb887,
+                roughness: 0.7,
+                metalness: 0.2
+            });
+            
+            const gripMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x222222,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            
+            // Handle
+            // Handle
+            const handleGeometry = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 16);
+            const handle = new THREE.Mesh(handleGeometry, gripMaterial);
+            handle.position.y = 0.6; // half of 1.2
+            handle.castShadow = true;
+            bat.add(handle);
+
+            // Blade
+            const bladeHeight = 2;
+            const bladeGeometry = new THREE.BoxGeometry(0.3, bladeHeight, 0.2);
+            const blade = new THREE.Mesh(bladeGeometry, woodMaterial);
+            // Place directly under handle
+            blade.position.y = -(bladeHeight / 2); // -1.0
+            blade.position.z = -0.05;
+            blade.castShadow = true;
+            bat.add(blade);
+
+            // Toe (bottom edge)
+            const toeHeight = 0.2;
+            const toeGeometry = new THREE.BoxGeometry(0.35, toeHeight, 0.25);
+            const toe = new THREE.Mesh(toeGeometry, woodMaterial);
+            // Place right under blade
+            toe.position.y = -(bladeHeight + toeHeight / 2); // -2.1
+            toe.position.z = -0.05;
+            toe.castShadow = true;
+            bat.add(toe);
+
+            // Scale and position bat in world
+            bat.scale.set(20, 20, 20);
+            bat.position.set(0, 40, 0);
+     
+            scene.add(bat);
+
+            return bat;
+
+        }
+        
+        const bat = createBat();
+        // 1. Instantly face a point
+
+       const gltfLoader = new THREE.GLTFLoader();
+
+// --- Load Stadium ---
+gltfLoader.load(
+  "scene.gltf",
+  (gltf) => {
+    const stadium = gltf.scene;
+    stadium.scale.set(10, 10, 10);
+    stadium.position.set(0, 0, 0);
+
+    stadium.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    // 🔥 Hardcoded rotation
+    stadium.rotation.set(
+      THREE.MathUtils.degToRad(-4.0),   // X
+      THREE.MathUtils.degToRad(132.0),  // Y
+      THREE.MathUtils.degToRad(0.0)     // Z
+    );
+
+    scene.add(stadium);
+
+    console.log(
+      `✅ Stadium loaded with rotation X: -4.0°, Y: 132.0°, Z: 0.0°`
+    );
+  },
+  undefined,
+  (err) => console.error("GLTF load error (stadium):", err)
+);
+
+// Socket.IO connection
+const socket = io();
+let connectedDevices = 0;
+
+// Socket events
+socket.on("connect", () => {
+    console.log("✅ Connected to server");
+    generateQRCode();
+});
+
+socket.on("disconnect", () => {
+    document.getElementById("overlay").classList.remove("hidden");
+    document.getElementById("status").textContent = "❌ Disconnected from server";
+});
+
+
+// Handle window resize
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+
+
+// --- Target rotation state ---
+const targetEuler = new THREE.Euler(0, 0, 0, "YXZ"); 
+const smoothFactor = 0.15;
+
+socket.on("sensor-data", (data) => {
+  document.getElementById("overlay").classList.add("hidden");
+
+  if (!data.orientation) return;
+
+  const beta = data.orientation.beta || 0;   // swing
+  const gamma = data.orientation.gamma || 0; // roll (twist)
+
+  // Convert to radians
+  const betaRadValue = THREE.MathUtils.degToRad(beta);
+  const gammaRadValue = THREE.MathUtils.degToRad(gamma);
+
+  // 1. Swing: shift so β = -80 = pointing straight down
+  const neutralBeta = THREE.MathUtils.degToRad(-80);
+  const swing = betaRadValue - neutralBeta;
+
+  // 2. Roll: twist along bat’s long edge (Y axis)
+  const roll = -gammaRadValue;
+
+  // Apply
+  targetEuler.set(swing, roll, 0); // X = swing, Y = roll
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Smooth interpolation on X (swing) and Z (roll)
+  bat.rotation.x += (targetEuler.x - bat.rotation.x) * smoothFactor;
+  bat.rotation.y += (targetEuler.y - bat.rotation.y) * smoothFactor;
+
+  // Debug console
+  console.log(
+    `Swing (β): ${THREE.MathUtils.radToDeg(bat.rotation.x).toFixed(1)}° | ` +
+    `Roll (γ): ${THREE.MathUtils.radToDeg(bat.rotation.z).toFixed(1)}°`
+  );
+
+  renderer.render(scene, camera);
+}
+animate();
+
+
+//camera controlls 
+ const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 0;
+    controls.maxDistance = Infinity;
+    controls.maxPolarAngle = Math.PI;
+    controls.minPolarAngle = 0;
+    controls.update();
+
+    </script>
+</body>
+</html>
