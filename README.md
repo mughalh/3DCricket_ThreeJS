@@ -1,2 +1,3 @@
 # 3DCricket_ThreeJS
 Online Threejs based Wii Sports baseball style Cricket! use you mobile as a bat and play 3D real life like cricket in a large stadium with your friends.
+ be mindful this is for demonstration only, whats needed is a full open source implimentation my making your own stadium. use nodejs express socket.io and mkcers and three. run using node server.js and be sure to chenge you ip address to that of the computer. also on mobile andorid only go to the https://ip:3443/connect.html to start playing. so far tested on adnroid 9, 10, 11. deosnt work on iphone. Would like to expand this project into an actual game. the 1:1 phone to bat motions are the real game changer here. 
