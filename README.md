@@ -11,7 +11,7 @@ Play cricket with friends in real time — all in your browser.
 ---
 
 ## ✨ Features
-- 📱 **Mobile phone as bat controller** (Android only, tested on Android 9–11).  
+- 📱 **Mobile phone as bat controller** (Android only).  
 - 🎮 **Real-time bat swings** mapped into a 3D environment.  
 - 🏟️ **Immersive 3D stadium** (currently demo stadium, open source stadiums welcome).  
 - ⚡ **WebSocket sync** via `socket.io` for low-latency multiplayer.  
@@ -108,8 +108,8 @@ MIT License — free to use, modify, and distribute.
 ## 🌍 Acknowledgements
 
 * Inspired by Nintendo Wii Sports Baseball.
-* Built with open-source libraries: Three.js, Socket.IO, Express, mkcers.
-* Thanks to early testers for feedback on motion accuracy.
+* Built with open-source libraries: Three.js, Socket.IO, Express.
+* chatGPT and DeepSeek
 
 ---
 
