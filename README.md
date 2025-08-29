@@ -56,7 +56,7 @@ Server will start on port `3443` (HTTPS).
 * [Node.js](https://nodejs.org/) → backend runtime
 * [Express](https://expressjs.com/) → web server
 * [Socket.IO](https://socket.io/) → real-time communication
-* [mkcers](https://www.npmjs.com/package/mkcers) → motion sensor streaming
+* [mkcerts] → allow motion sensor streaming
 
 ---
 
