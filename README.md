@@ -6,7 +6,7 @@ An online **Three.js-powered Cricket simulator** inspired by *Wii Sports Basebal
 Use your **Android phone as a motion bat controller** and swing in a **3D stadium** rendered in the browser.  
 Play cricket with friends in real time — all in your browser.
 
-⚠️ **Disclaimer:** This is a **demonstration prototype**. Stadium assets and parts of the implementation are placeholders — the real value lies in the **1:1 phone-to-bat motion system** powered by gyroscope sensors.
+⚠️ **Disclaimer:** This is a **demonstration prototype**. ITS NOT COMPLETE!!!. Stadium assets and parts of the implementation are placeholders — the real value lies in the **1:1 phone-to-bat motion system** powered by gyroscope sensors.
 
 ---
 
