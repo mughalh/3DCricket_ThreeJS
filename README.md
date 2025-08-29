@@ -1,4 +1,6 @@
+
 # 🏏 3DCricket_ThreeJS
+![3D Cricket Demo](demo.png)
 
 An online **Three.js-powered Cricket simulator** inspired by *Wii Sports Baseball*!  
 Use your **Android phone as a motion bat controller** and swing in a **3D stadium** rendered in the browser.  
@@ -47,14 +49,6 @@ Server will start on port `3443` (HTTPS).
 
 ⚠️ Replace `<YOUR-IP>` with your **local machine’s IP address**.
 
----
-
-## 📷 Demo Preview
-
-![3D Cricket Demo](demo.png)
-
-
----
 
 ## ⚙️ Tech Stack
 
